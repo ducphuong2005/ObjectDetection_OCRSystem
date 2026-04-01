@@ -1,0 +1,56 @@
+# Detection configuration
+model:
+  backbone: "ResNet50-FPN"
+  architecture: "Faster R-CNN"
+  model_zoo_config: "COCO-Detection/faster_rcnn_R_50_FPN_3x.yaml"
+  num_classes: 3
+
+classes:
+  - name: "PartDrawing"
+    id: 0
+    color: [255, 255, 0]  # Cyan (BGR)
+  - name: "Note"
+    id: 1
+    color: [128, 0, 128]  # Purple (BGR)
+  - name: "Table"
+    id: 2
+    color: [0, 0, 255]    # Red (BGR)
+
+training:
+  base_lr: 0.00025
+  max_iter: 3000
+  batch_size: 2
+  warmup_iters: 200
+  steps: [2000, 2500]
+  gamma: 0.1
+  checkpoint_period: 500
+  eval_period: 500
+
+augmentation:
+  horizontal_flip: 0.3
+  rotation_range: [-15, 15]
+  brightness_range: [0.8, 1.2]
+  contrast_range: [0.8, 1.2]
+  gaussian_blur: true
+  grayscale: 0.2
+
+inference:
+  confidence_threshold: 0.5
+  nms_threshold: 0.5
+
+ocr:
+  primary_engine: "paddleocr"
+  fallback_engine: "tesseract"
+  language: "vi"
+  use_ensemble: true
+
+table:
+  min_line_length: 30
+  kernel_scale: 15
+  deskew: true
+
+output:
+  save_crops: true
+  save_visualizations: true
+  save_json: true
+  crop_padding: 10

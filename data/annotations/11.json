@@ -1,0 +1,62 @@
+[
+  {
+    "bbox": [
+      4,
+      17,
+      716,
+      507
+    ],
+    "class": "PartDrawing",
+    "class_id": 0
+  },
+  {
+    "bbox": [
+      25,
+      102,
+      578,
+      489
+    ],
+    "class": "PartDrawing",
+    "class_id": 0
+  },
+  {
+    "bbox": [
+      691,
+      139,
+      229,
+      80
+    ],
+    "class": "Note",
+    "class_id": 1
+  },
+  {
+    "bbox": [
+      751,
+      36,
+      226,
+      70
+    ],
+    "class": "Table",
+    "class_id": 2
+  },
+  {
+    "bbox": [
+      735,
+      224,
+      246,
+      314
+    ],
+    "class": "Table",
+    "class_id": 2
+  },
+  {
+    "bbox": [
+      586,
+      528,
+      386,
+      100
+    ],
+    "class": "Table",
+    "class_id": 2
+  }
+]

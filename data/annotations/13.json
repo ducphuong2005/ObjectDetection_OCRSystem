@@ -1,0 +1,32 @@
+[
+  {
+    "bbox": [
+      50,
+      41,
+      871,
+      407
+    ],
+    "class": "PartDrawing",
+    "class_id": 0
+  },
+  {
+    "bbox": [
+      34,
+      428,
+      448,
+      227
+    ],
+    "class": "Table",
+    "class_id": 2
+  },
+  {
+    "bbox": [
+      499,
+      501,
+      468,
+      170
+    ],
+    "class": "Table",
+    "class_id": 2
+  }
+]
