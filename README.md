@@ -26,7 +26,9 @@ Hệ thống Computer Vision end-to-end để **phát hiện và trích xuất n
    ↓
 [5] Xuất JSON có cấu trúc
    ↓
-[6] Web demo trực quan (Gradio)
+[6] Web demo trực quan (Gradio - local)
+   ↓
+[7] Deploy tạm thời lên nền tảng của ngrok (chọn ngrok do model quá nặng)
 ```
 
 ## Cấu trúc thư mục
