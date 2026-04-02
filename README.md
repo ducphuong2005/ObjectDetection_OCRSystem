@@ -1,11 +1,3 @@
----
-title: BOM Object Detection & OCR
-emoji: 🔍
-colorFrom: blue
-colorTo: purple
-sdk: docker
-pinned: false
----
 
 #  BOM Object Detection & OCR System
 
