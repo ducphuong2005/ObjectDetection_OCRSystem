@@ -31,10 +31,21 @@ def process_image(input_image: np.ndarray, confidence_threshold: float = 0.5) ->
     """Xử lý ảnh upload qua pipeline, trả ảnh annotated + JSON + HTML OCR + gallery."""
     global pipeline
 
-    if pipeline is None:
-        initialize_pipeline()
     if input_image is None:
         return None, "{}", "Chưa upload ảnh", []
+
+    # Lazy-load: chỉ tải model khi user bấm nút lần đầu (tránh timeout HF Spaces)
+    if pipeline is None:
+        logger.info("Pipeline chưa khởi tạo, đang Lazy-load...")
+        try:
+            gr.Info("🔄 Lần đầu chạy: đang tải Model (~1-2 phút)...")
+            initialize_pipeline(None)
+        except Exception as e:
+            logger.error(f"Lỗi khởi tạo pipeline: {e}")
+            return input_image, json.dumps({"error": str(e)}), f'<p style="color:red;">Lỗi khởi tạo: {e}</p>', []
+    
+    if pipeline is None:
+        return input_image, json.dumps({"error": "Pipeline không khởi tạo được"}), '<p style="color:red;">Lỗi Pipeline</p>', []
 
     pipeline.detector.confidence_threshold = confidence_threshold
     bgr_image = cv2.cvtColor(input_image, cv2.COLOR_RGB2BGR)
@@ -145,14 +156,12 @@ def _build_html_table(table_data: list) -> str:
 def create_demo() -> gr.Blocks:
     """Tạo giao diện Gradio."""
     with gr.Blocks(title="BOM Detection & OCR System") as demo:
-        gr.Markdown("""
-            # Hệ thống Phát hiện & OCR Bản vẽ BOM
-
-            Upload bản vẽ kỹ thuật để phát hiện các vùng **PartDrawing**, **Note**, **Table**
-            và trích xuất nội dung text/bảng tự động.
-
-            ---
-        """)
+        gr.Markdown(
+            "# Hệ thống Phát hiện & OCR Bản vẽ BOM\n\n"
+            "Upload bản vẽ kỹ thuật để phát hiện các vùng **PartDrawing**, **Note**, **Table** "
+            "và trích xuất nội dung text/bảng tự động.\n\n"
+            "---\n"
+        )
 
         with gr.Row():
             with gr.Column(scale=1):
@@ -178,7 +187,7 @@ def create_demo() -> gr.Blocks:
         with gr.Row():
             crops_gallery = gr.Gallery(label="Vùng đã cắt", columns=4, height=250)
 
-        example_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), "Dataset", "BOM-Dataset")
+        example_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), "examples")
         if os.path.exists(example_dir):
             example_images = [
                 os.path.join(example_dir, f)

@@ -1,3 +1,12 @@
+---
+title: BOM Object Detection & OCR
+emoji: 🔍
+colorFrom: blue
+colorTo: purple
+sdk: docker
+pinned: false
+---
+
 #  BOM Object Detection & OCR System
 
 Hệ thống Computer Vision end-to-end để **phát hiện và trích xuất nội dung** từ bản vẽ kỹ thuật BOM (Bill of Materials).
@@ -188,3 +197,66 @@ Thay vì chia nhỏ từng ô (quá bé để OCR), hệ thống:
   ]
 }
 ```
+
+### Approach
+
+Bài toán được chia thành pipeline gồm 6 bước tuần tự, module hoá rõ ràng:
+
+1. **Object Detection:** Sử dụng Faster R-CNN (ResNet50-FPN) từ Detectron2, pretrained trên COCO rồi fine-tune trên dataset BOM tự gán nhãn. Chọn Faster R-CNN vì:
+   - Độ chính xác cao với bounding box regression (không dùng YOLO theo yêu cầu đề bài)
+   - Backbone ResNet50-FPN cho feature multi-scale phù hợp ảnh bản vẽ kỹ thuật
+   - Detectron2 hỗ trợ COCO format, dễ tích hợp evaluation
+
+2. **OCR Engine:** Kết hợp PaddleOCR v5 (chính) + Tesseract (fallback):
+   - PaddleOCR cho accuracy cao trên text tiếng Anh kỹ thuật
+   - Tesseract làm fallback khi PaddleOCR fail
+   - Dual-pass: chạy trên cả ảnh gốc và ảnh đã tiền xử lý, chọn kết quả confidence cao hơn
+
+3. **Table Structure Reconstruction:** Không chia nhỏ từng ô (cell-splitting) vì ô quá bé khiến OCR fail. Thay vào đó:
+   - OCR toàn bộ ảnh bảng → lấy text + vị trí (x, y)
+   - Nhóm text theo hàng (clustering Y-position, adaptive threshold theo chiều cao chữ)
+   - Align cột bằng clustering cạnh trái (x1, adaptive threshold theo chiều rộng chữ)
+
+### Các thử nghiệm
+
+| Thử nghiệm | Mô tả | Kết quả |
+|-------------|--------|---------|
+| Cell-splitting OCR | Chia bảng thành từng ô nhỏ, OCR từng ô | Fail — ô quá bé, PaddleOCR trả về rỗng |
+| Full-image OCR + position grouping | OCR toàn bộ bảng, tái tạo cấu trúc từ vị trí | Thành công — nhận đủ text và đúng cấu trúc |
+| Center-x column alignment | Dùng tâm X để cluster cột | Sai lệch khi text dài/ngắn khác nhau |
+| Left-edge (x1) column alignment | Dùng cạnh trái để cluster cột | Ổn định hơn, chính xác hơn |
+| PaddleOCR v4 API | `.ocr()` trả nested list | Hoạt động ổn |
+| PaddleOCR v5 API | `.predict()` trả dict mới | Cần parse riêng — đã xử lý |
+| Dual-pass OCR (preprocessed vs original) | So sánh confidence, chọn kết quả tốt hơn | Tăng accuracy cho ảnh chất lượng kém |
+
+### Kết quả đạt được
+
+- Pipeline hoàn chỉnh end-to-end: từ ảnh đầu vào → JSON có cấu trúc
+- Phát hiện 3 class (PartDrawing, Note, Table) với confidence > 0.9
+- OCR Note: trích xuất chính xác text kỹ thuật nhiều dòng
+- OCR Table: tái tạo đúng cấu trúc hàng/cột, hiển thị dạng HTML table
+- Web demo Gradio hiển thị: ảnh annotated, JSON, HTML table, gallery crop
+- Hỗ trợ cả PaddleOCR v4 và v5
+
+### Hướng cải thiện
+
+1. **Tăng dữ liệu training:** Dataset hiện tại nhỏ (~10 ảnh). Cần bổ sung thêm bản vẽ đa dạng để model phát hiện robust hơn trên nhiều layout.
+
+2. **Table Structure nâng cao:**
+   - Xử lý bảng merge cell (rowspan/colspan)
+   - Phát hiện header tự động thay vì mặc định hàng đầu
+   - Dùng deep learning cho table structure (ví dụ: TableTransformer, LORE)
+
+3. **OCR accuracy:**
+   - Fine-tune PaddleOCR trên font kỹ thuật chuyên biệt
+   - Xử lý text nghiêng/xoay trong bản vẽ
+   - Cải thiện hậu xử lý cho ký tự đặc biệt (ø, ×, ±)
+
+4. **Mở rộng class:**
+   - Thêm class: Title Block, Dimension, Symbol, Revision Table
+   - Trích xuất thông tin dimension tự động
+
+5. **Performance:**
+   - Batch inference cho xử lý nhiều ảnh
+   - Quantization model cho inference nhanh hơn
+   - Cache OCR engine để tránh khởi tạo lại mỗi request

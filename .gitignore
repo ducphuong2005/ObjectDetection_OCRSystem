@@ -40,3 +40,9 @@ build/
 
 .env
 .env.local
+
+data/
+Dataset/
+models/
+*.pth
+outputs/

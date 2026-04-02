@@ -1,7 +1,5 @@
 # Core ML
-torch>=2.0.0
-torchvision>=0.15.0
-# detectron2 - install via: python -m pip install 'git+https://github.com/facebookresearch/detectron2.git'
+# (torch và torchvision đã được cài bằng bản CPU-only trong Dockerfile)
 paddlepaddle>=2.5.0
 paddleocr>=2.7.0
 pytesseract>=0.3.10
